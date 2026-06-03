@@ -58,7 +58,7 @@ fun MovieRow(
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(movie.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(listOfNotNull(movie.year?.toString(), movie.genres.firstOrNull()?.name).joinToString(" • "), style = MaterialTheme.typography.bodyMedium)
+                Text(listOfNotNull(movie.year?.toString(), movie.genres.firstOrNull()?.name).joinToString(" | "), style = MaterialTheme.typography.bodyMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))

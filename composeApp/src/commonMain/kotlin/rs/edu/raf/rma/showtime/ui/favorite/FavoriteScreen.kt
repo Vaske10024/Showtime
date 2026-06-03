@@ -33,9 +33,6 @@ fun FavoriteScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    LaunchedEffect("sync-on-open") {
-        viewModel.onIntent(FavoriteIntent.Refresh)
-    }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->

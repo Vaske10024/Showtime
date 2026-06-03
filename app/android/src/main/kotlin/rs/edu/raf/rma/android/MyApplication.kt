@@ -15,6 +15,8 @@ class MyApplication : Application() {
         AppContextHolder.init(this.applicationContext)
         Napier.base(DebugAntilog())
         Log.d("Test", "App:onCreate()")
+
+        //Zovemo funkciju initKin - Dependency injection
         initKoin {
             androidContext(this@MyApplication)
         }

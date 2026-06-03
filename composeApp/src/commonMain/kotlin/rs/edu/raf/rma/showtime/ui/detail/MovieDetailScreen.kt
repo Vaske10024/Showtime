@@ -109,7 +109,7 @@ private fun MovieDetailContent(
                         Poster(path = movie.posterPath, modifier = Modifier.width(125.dp).aspectRatio(2f / 3f))
                         Column(Modifier.weight(1f)) {
                             Text(movie.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                            Text(listOfNotNull(movie.year?.toString(), movie.runtime?.let { "$it min" }).joinToString(" • "))
+                            Text(listOfNotNull(movie.year?.toString(), movie.runtime?.let { "$it min" }).joinToString(" | "))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Star, contentDescription = null)
                                 Text(" IMDb ${movie.imdbRating.ratingText()}  TMDB ${movie.tmdbRating.ratingText()}")

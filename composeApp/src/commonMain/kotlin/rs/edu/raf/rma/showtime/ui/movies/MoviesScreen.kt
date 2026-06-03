@@ -216,7 +216,7 @@ private fun FilterPanel(state: MoviesViewState, onIntent: (MoviesIntent) -> Unit
                     Text(state.filters.sortBy.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 DropdownMenu(expanded = sortExpanded, onDismissRequest = { sortExpanded = false }) {
-                    SortBy.values().forEach { sort ->
+                    SortBy.values().filter { it != SortBy.Popularity }.forEach { sort ->
                         DropdownMenuItem(text = { Text(sort.label) }, onClick = { sortExpanded = false; onIntent(MoviesIntent.SortByChanged(sort)) })
                     }
                 }
