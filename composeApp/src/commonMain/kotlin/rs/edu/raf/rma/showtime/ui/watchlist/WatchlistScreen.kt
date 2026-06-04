@@ -78,7 +78,11 @@ private fun WatchlistContent(
                     MovieRow(
                         movie = movie,
                         onClick = { onMovieClick(movie.imdbId) },
-                        onRemove = { onIntent(WatchlistIntent.Remove(movie.imdbId)) },
+                        onRemove = if (state.isOffline) {
+                            null
+                        } else {
+                            { onIntent(WatchlistIntent.Remove(movie.imdbId)) }
+                        },
                     )
                 }
             }

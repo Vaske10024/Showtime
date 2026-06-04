@@ -2,7 +2,6 @@ package rs.edu.raf.rma.showtime.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
 import rs.edu.raf.rma.core.db.AppDatabase
 import rs.edu.raf.rma.showtime.data.api.ShowtimeException
 import rs.edu.raf.rma.showtime.data.api.UserApi
@@ -27,13 +26,18 @@ class WatchlistRepository(
     suspend fun syncWatchlist() {
         authenticatedCallRunner.execute {
             val remote = api.getWatchlist()
+
             movieRepository.upsertListItems(remote)
+
+            val now = Clock.System.now().toEpochMilliseconds()
+
             dao.clearWatchlist()
+
             dao.insertWatchlist(
-                remote.map {
+                remote.mapIndexed { index, item ->
                     WatchlistEntity(
-                        movieId = it.imdbId,
-                        createdAt = Clock.System.now().toEpochMilliseconds(),
+                        movieId = item.imdbId,
+                        createdAt = now - index,
                     )
                 }
             )
@@ -42,23 +46,36 @@ class WatchlistRepository(
 
     suspend fun setWatchlist(movieId: String, enabled: Boolean) {
         val previous = dao.isWatchlist(movieId)
+
         if (previous == enabled) return
+
         applyLocal(movieId, enabled)
+
         try {
             authenticatedCallRunner.execute {
-                if (enabled) api.addWatchlist(movieId) else api.removeWatchlist(movieId)
+                if (enabled) {
+                    api.addWatchlist(movieId)
+                } else {
+                    api.removeWatchlist(movieId)
+                }
             }
         } catch (throwable: Throwable) {
             if (throwable !is ShowtimeException || throwable.kind != ShowtimeException.Kind.Unauthorized) {
                 applyLocal(movieId, previous)
             }
+
             throw throwable
         }
     }
 
     private suspend fun applyLocal(movieId: String, enabled: Boolean) {
         if (enabled) {
-            dao.insertWatchlistItem(WatchlistEntity(movieId = movieId, createdAt = Clock.System.now().toEpochMilliseconds()))
+            dao.insertWatchlistItem(
+                WatchlistEntity(
+                    movieId = movieId,
+                    createdAt = Clock.System.now().toEpochMilliseconds(),
+                )
+            )
         } else {
             dao.deleteWatchlistItem(movieId)
         }

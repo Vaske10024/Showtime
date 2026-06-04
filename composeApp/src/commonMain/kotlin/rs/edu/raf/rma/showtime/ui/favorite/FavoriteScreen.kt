@@ -78,7 +78,11 @@ private fun FavoriteContent(
                     MovieRow(
                         movie = movie,
                         onClick = { onMovieClick(movie.imdbId) },
-                        onRemove = { onIntent(FavoriteIntent.Remove(movie.imdbId)) },
+                        onRemove = if (state.isOffline) {
+                            null
+                        } else {
+                            { onIntent(FavoriteIntent.Remove(movie.imdbId)) }
+                        },
                     )
                 }
             }

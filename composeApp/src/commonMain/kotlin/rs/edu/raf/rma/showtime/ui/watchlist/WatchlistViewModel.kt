@@ -50,7 +50,15 @@ class WatchlistViewModel(
                 .onSuccess { _state.getAndUpdate { it.copy(isLoading = false, isOffline = false) } }
                 .onFailure { throwable ->
                     val message = throwable.messageForUi()
-                    _state.getAndUpdate { it.copy(isLoading = false, isOffline = it.movies.isNotEmpty(), errorMessage = message) }
+
+                    _state.getAndUpdate {
+                        it.copy(
+                            isLoading = false,
+                            isOffline = true,
+                            errorMessage = message,
+                        )
+                    }
+
                     _effects.emit(WatchlistEffect.ShowMessage(message))
                 }
         }

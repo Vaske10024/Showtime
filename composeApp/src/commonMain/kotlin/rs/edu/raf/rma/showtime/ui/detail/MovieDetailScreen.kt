@@ -58,12 +58,19 @@ fun MovieDetailScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is MovieDetailEffect.ShowMessage -> snackbarHostState.showSnackbar(effect.message)
+                is MovieDetailEffect.ShowMessage -> {
+                    snackbarHostState.showSnackbar(effect.message)
+                }
             }
         }
     }
 
-    MovieDetailContent(state, snackbarHostState, viewModel::onIntent, onBack)
+    MovieDetailContent(
+        state = state,
+        snackbarHostState = snackbarHostState,
+        onIntent = viewModel::onIntent,
+        onBack = onBack,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,26 +82,60 @@ private fun MovieDetailContent(
     onBack: () -> Unit,
 ) {
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState)
+        },
         topBar = {
             TopAppBar(
-                title = { Text(state.movie?.title ?: "Movie Detail") },
+                title = {
+                    Text(state.movie?.title ?: "Movie Detail")
+                },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
                 },
                 actions = {
-                    IconButton(onClick = { onIntent(MovieDetailIntent.Refresh) }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    IconButton(
+                        onClick = {
+                            onIntent(MovieDetailIntent.Refresh)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                        )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         when {
-            state.isLoading && state.movie == null -> CenterMessage("Loading movie...", Modifier.fillMaxSize().padding(padding), isLoading = true)
-            state.movie == null -> CenterMessage(state.errorMessage ?: "Movie is not available offline yet.", Modifier.fillMaxSize().padding(padding))
+            state.isLoading && state.movie == null -> {
+                CenterMessage(
+                    message = "Loading movie...",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    isLoading = true,
+                )
+            }
+
+            state.movie == null -> {
+                CenterMessage(
+                    message = state.errorMessage ?: "Movie is not available offline yet.",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                )
+            }
+
             else -> {
                 val movie = state.movie
+
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -103,53 +144,155 @@ private fun MovieDetailContent(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    if (state.isOffline) Text("Offline: showing cached details.", color = MaterialTheme.colorScheme.tertiary)
-                    Backdrop(path = movie.backdropPath, modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Poster(path = movie.posterPath, modifier = Modifier.width(125.dp).aspectRatio(2f / 3f))
-                        Column(Modifier.weight(1f)) {
-                            Text(movie.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                            Text(listOfNotNull(movie.year?.toString(), movie.runtime?.let { "$it min" }).joinToString(" | "))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Star, contentDescription = null)
-                                Text(" IMDb ${movie.imdbRating.ratingText()}  TMDB ${movie.tmdbRating.ratingText()}")
+                    if (state.isOffline) {
+                        Text(
+                            text = "Offline: showing cached details.",
+                            color = MaterialTheme.colorScheme.tertiary,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    Backdrop(
+                        path = movie.backdropPath,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(16f / 9f),
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Poster(
+                            path = movie.posterPath,
+                            modifier = Modifier
+                                .width(125.dp)
+                                .aspectRatio(2f / 3f),
+                        )
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(
+                                text = movie.title,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                            )
+
+                            Text(
+                                text = listOfNotNull(
+                                    movie.year?.toString(),
+                                    movie.runtime?.let { "$it min" },
+                                ).joinToString(" | "),
+                            )
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                )
+
+                                Text(
+                                    text = " IMDb ${movie.imdbRating.ratingText()}  TMDB ${movie.tmdbRating.ratingText()}",
+                                )
                             }
                         }
                     }
+
                     GenreChips(movie.genres)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         Button(
                             modifier = Modifier.weight(1f),
-                            onClick = { onIntent(MovieDetailIntent.ToggleFavorite) },
-                            enabled = !state.isFavoriteUpdating,
+                            onClick = {
+                                onIntent(MovieDetailIntent.ToggleFavorite)
+                            },
+                            enabled = !state.isFavoriteUpdating && !state.isOffline,
                         ) {
-                            Icon(Icons.Default.Favorite, contentDescription = null)
+                            Icon(
+                                imageVector = Icons.Default.Favorite,
+                                contentDescription = null,
+                            )
+
                             Spacer(Modifier.width(6.dp))
-                            Text(if (movie.isFavorite) "Favorite" else "Add Favorite")
+
+                            Text(
+                                text = if (movie.isFavorite) {
+                                    "Favorite"
+                                } else {
+                                    "Add Favorite"
+                                },
+                            )
                         }
+
                         OutlinedButton(
                             modifier = Modifier.weight(1f),
-                            onClick = { onIntent(MovieDetailIntent.ToggleWatchlist) },
-                            enabled = !state.isWatchlistUpdating,
+                            onClick = {
+                                onIntent(MovieDetailIntent.ToggleWatchlist)
+                            },
+                            enabled = !state.isWatchlistUpdating && !state.isOffline,
                         ) {
-                            Icon(Icons.Default.Bookmark, contentDescription = null)
+                            Icon(
+                                imageVector = Icons.Default.Bookmark,
+                                contentDescription = null,
+                            )
+
                             Spacer(Modifier.width(6.dp))
-                            Text(if (movie.isWatchlist) "Watchlist" else "Add Watchlist")
+
+                            Text(
+                                text = if (movie.isWatchlist) {
+                                    "Watchlist"
+                                } else {
+                                    "Add Watchlist"
+                                },
+                            )
                         }
                     }
-                    if (state.isFavoriteUpdating || state.isWatchlistUpdating) {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+
+                    if (state.isOffline) {
+                        Text(
+                            text = "Favorites and Watchlist are read-only while offline.",
+                            color = MaterialTheme.colorScheme.tertiary,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
-                    Text("Overview", style = MaterialTheme.typography.titleLarge)
-                    Text(movie.overview ?: "No overview available.")
-                    Text("Cast", style = MaterialTheme.typography.titleLarge)
+
+                    if (state.isFavoriteUpdating || state.isWatchlistUpdating) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    Text(
+                        text = "Overview",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+
+                    Text(
+                        text = movie.overview ?: "No overview available.",
+                    )
+
+                    Text(
+                        text = "Cast",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+
                     if (movie.cast.isEmpty()) {
                         Text("No cast data cached yet. Tap refresh when online.")
                     } else {
                         movie.cast.take(12).forEach { cast ->
-                            Text("• ${cast.name}${cast.department?.let { " ($it)" } ?: ""}")
+                            Text(
+                                text = "• ${cast.name}${cast.department?.let { " ($it)" } ?: ""}",
+                            )
                         }
                     }
+
                     Spacer(Modifier.height(12.dp))
                 }
             }

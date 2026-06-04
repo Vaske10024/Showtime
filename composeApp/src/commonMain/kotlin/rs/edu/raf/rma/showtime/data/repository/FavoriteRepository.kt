@@ -2,7 +2,6 @@ package rs.edu.raf.rma.showtime.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
 import rs.edu.raf.rma.core.db.AppDatabase
 import rs.edu.raf.rma.showtime.data.api.ShowtimeException
 import rs.edu.raf.rma.showtime.data.api.UserApi
@@ -27,13 +26,18 @@ class FavoriteRepository(
     suspend fun syncFavorites() {
         authenticatedCallRunner.execute {
             val remote = api.getFavorites()
+
             movieRepository.upsertListItems(remote)
+
+            val now = Clock.System.now().toEpochMilliseconds()
+
             dao.clearFavorites()
+
             dao.insertFavorites(
-                remote.map {
+                remote.mapIndexed { index, item ->
                     FavoriteEntity(
-                        movieId = it.imdbId,
-                        createdAt = Clock.System.now().toEpochMilliseconds(),
+                        movieId = item.imdbId,
+                        createdAt = now - index,
                     )
                 }
             )
@@ -42,23 +46,36 @@ class FavoriteRepository(
 
     suspend fun setFavorite(movieId: String, enabled: Boolean) {
         val previous = dao.isFavorite(movieId)
+
         if (previous == enabled) return
+
         applyLocal(movieId, enabled)
+
         try {
             authenticatedCallRunner.execute {
-                if (enabled) api.addFavorite(movieId) else api.removeFavorite(movieId)
+                if (enabled) {
+                    api.addFavorite(movieId)
+                } else {
+                    api.removeFavorite(movieId)
+                }
             }
         } catch (throwable: Throwable) {
             if (throwable !is ShowtimeException || throwable.kind != ShowtimeException.Kind.Unauthorized) {
                 applyLocal(movieId, previous)
             }
+
             throw throwable
         }
     }
 
     private suspend fun applyLocal(movieId: String, enabled: Boolean) {
         if (enabled) {
-            dao.insertFavorite(FavoriteEntity(movieId = movieId, createdAt = Clock.System.now().toEpochMilliseconds()))
+            dao.insertFavorite(
+                FavoriteEntity(
+                    movieId = movieId,
+                    createdAt = Clock.System.now().toEpochMilliseconds(),
+                )
+            )
         } else {
             dao.deleteFavorite(movieId)
         }

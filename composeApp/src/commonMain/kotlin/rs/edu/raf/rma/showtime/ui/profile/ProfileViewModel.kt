@@ -70,8 +70,12 @@ class ProfileViewModel(
             _state.getAndUpdate { ProfileReducer.reduce(it, ProfileIntent.Refresh) }
             runCatching {
                 authRepository.refreshProfile()
-                runCatching { favoriteRepository.syncFavorites() }
-                runCatching { watchlistRepository.syncWatchlist() }
+
+                val favoriteSync = runCatching { favoriteRepository.syncFavorites() }
+                val watchlistSync = runCatching { watchlistRepository.syncWatchlist() }
+
+                favoriteSync.exceptionOrNull()?.let { throw it }
+                watchlistSync.exceptionOrNull()?.let { throw it }
             }.onSuccess {
                 _state.getAndUpdate { it.copy(isLoading = false, isOffline = false) }
             }.onFailure { throwable ->
