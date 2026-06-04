@@ -202,7 +202,7 @@ private fun QuestionCard(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(question.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         Card(Modifier.fillMaxWidth()) {
-            val url = imageUrl(question.imagePath, size = "w780")
+            val url = imageUrl(question.imagePath, size = question.imageSize)
             if (url == null) {
                 Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f), contentAlignment = Alignment.Center) { Text("No image") }
             } else {

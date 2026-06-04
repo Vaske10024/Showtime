@@ -63,13 +63,13 @@ interface ShowtimeDao {
     @Query("SELECT * FROM movies")
     suspend fun getAllMovies(): List<MovieEntity>
 
-    @Query("SELECT * FROM movies WHERE (posterPath IS NOT NULL AND posterPath != '') OR (backdropPath IS NOT NULL AND backdropPath != '') OR (imagePathsJson != '[]')")
+    @Query("SELECT * FROM movies WHERE posterPath IS NOT NULL AND posterPath != ''")
     suspend fun getQuizPool(): List<MovieEntity>
 
-    @Query("SELECT COUNT(*) FROM movies WHERE (posterPath IS NOT NULL AND posterPath != '') OR (backdropPath IS NOT NULL AND backdropPath != '') OR (imagePathsJson != '[]')")
+    @Query("SELECT COUNT(*) FROM movies WHERE posterPath IS NOT NULL AND posterPath != ''")
     fun observeQuizPoolCount(): Flow<Int>
 
-    @Query("SELECT COUNT(*) FROM movies WHERE (posterPath IS NOT NULL AND posterPath != '') OR (backdropPath IS NOT NULL AND backdropPath != '') OR (imagePathsJson != '[]')")
+    @Query("SELECT COUNT(*) FROM movies WHERE posterPath IS NOT NULL AND posterPath != ''")
     suspend fun getQuizPoolCount(): Int
 
     @Query("SELECT * FROM genres ORDER BY name ASC")

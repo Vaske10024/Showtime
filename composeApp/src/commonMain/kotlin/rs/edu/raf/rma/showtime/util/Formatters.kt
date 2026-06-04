@@ -5,8 +5,12 @@ import kotlin.math.roundToInt
 private const val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
 
 fun imageUrl(path: String?, size: String = "w500"): String? {
-    if (path.isNullOrBlank()) return null
-    return if (path.startsWith("http")) path else IMAGE_BASE_URL + size + path
+    val cleanPath = path?.trim()?.takeIf { it.isNotBlank() } ?: return null
+    return if (cleanPath.startsWith("http://") || cleanPath.startsWith("https://")) {
+        cleanPath
+    } else {
+        IMAGE_BASE_URL + size + "/" + cleanPath.trimStart('/')
+    }
 }
 
 fun Double?.ratingText(): String = this?.let { oneDecimal(it) } ?: "-"

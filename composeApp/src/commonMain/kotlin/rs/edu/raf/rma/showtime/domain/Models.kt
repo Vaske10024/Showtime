@@ -93,6 +93,7 @@ data class QuizQuestion(
     val type: QuizQuestionType,
     val title: String,
     val imagePath: String,
+    val imageSize: String = "w342",
     val answers: List<QuizAnswer>,
 )
 

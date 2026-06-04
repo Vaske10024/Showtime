@@ -6,6 +6,7 @@ import rs.edu.raf.rma.showtime.data.repository.AuthRepository
 import rs.edu.raf.rma.showtime.data.repository.AuthSessionManager
 import rs.edu.raf.rma.showtime.data.repository.AuthenticatedCallRunner
 import rs.edu.raf.rma.showtime.data.repository.FavoriteRepository
+import rs.edu.raf.rma.showtime.data.repository.ImageCacheWarmer
 import rs.edu.raf.rma.showtime.data.repository.MovieRepository
 import rs.edu.raf.rma.showtime.data.repository.QuizRepository
 import rs.edu.raf.rma.showtime.data.repository.WatchlistRepository
@@ -21,7 +22,8 @@ import rs.edu.raf.rma.showtime.ui.watchlist.WatchlistViewModel
 val showtimeModule = module {
     single { AuthSessionManager(authStore = get(), database = get()) }
     single { AuthenticatedCallRunner(sessionManager = get()) }
-    single { MovieRepository(api = get(), database = get()) }
+    single { ImageCacheWarmer(platformContext = get()) }
+    single { MovieRepository(api = get(), database = get(), imageCacheWarmer = get()) }
     single { FavoriteRepository(api = get(), database = get(), movieRepository = get(), authenticatedCallRunner = get()) }
     single { WatchlistRepository(api = get(), database = get(), movieRepository = get(), authenticatedCallRunner = get()) }
     single { QuizRepository(api = get(), database = get(), authenticatedCallRunner = get()) }

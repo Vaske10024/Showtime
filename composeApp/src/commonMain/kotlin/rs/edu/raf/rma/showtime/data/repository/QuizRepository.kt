@@ -132,7 +132,7 @@ class QuizRepository(
     }
 
     private fun guessMovie(movie: MovieEntity, pool: List<MovieEntity>, usedImages: Set<String>): QuizQuestion? {
-        val image = movie.imageCandidates().firstOrNull { it !in usedImages } ?: return null
+        val image = movie.quizImageCandidates().firstOrNull { it.path !in usedImages } ?: return null
         val wrong = pool.filter { it.imdbId != movie.imdbId }.shuffled().map { it.title }.distinct().take(3)
         if (wrong.size < 3) return null
         val answers = (wrong.map { QuizAnswer(it, it, false) } + QuizAnswer(movie.title, movie.title, true)).shuffled()
@@ -140,14 +140,15 @@ class QuizRepository(
             id = "${movie.imdbId}|movie|${Random.nextInt()}",
             type = QuizQuestionType.GuessMovie,
             title = "Guess the Movie",
-            imagePath = image,
+            imagePath = image.path,
+            imageSize = image.size,
             answers = answers,
         )
     }
 
     private fun guessMovieYear(movie: MovieEntity, usedImages: Set<String>): QuizQuestion? {
         val year = movie.year ?: return null
-        val image = movie.posterPath?.takeIf { it !in usedImages } ?: movie.imageCandidates().firstOrNull { it !in usedImages } ?: return null
+        val image = movie.quizImageCandidates().firstOrNull { it.path !in usedImages } ?: return null
         val wrongYears = mutableSetOf<Int>()
         val offsets = ((-10..-1) + (1..10)).shuffled()
         offsets.forEach { offset ->
@@ -159,7 +160,8 @@ class QuizRepository(
             id = "${movie.imdbId}|year|${Random.nextInt()}",
             type = QuizQuestionType.GuessMovieYear,
             title = "${movie.title}: release year?",
-            imagePath = image,
+            imagePath = image.path,
+            imageSize = image.size,
             answers = answers,
         )
     }
@@ -178,13 +180,14 @@ class QuizRepository(
             .shuffled()
             .take(3)
         if (wrong.size < 3) return null
-        val image = movie.posterPath?.takeIf { it !in usedImages } ?: movie.imageCandidates().firstOrNull { it !in usedImages } ?: return null
+        val image = movie.quizImageCandidates().firstOrNull { it.path !in usedImages } ?: return null
         val answers = (wrong.map { QuizAnswer(it, it, false) } + QuizAnswer(correct.name, correct.name, true)).shuffled()
         return QuizQuestion(
             id = "${movie.imdbId}|actor|${Random.nextInt()}",
             type = QuizQuestionType.GuessLeadActor,
             title = "Who is a lead actor in ${movie.title}?",
-            imagePath = image,
+            imagePath = image.path,
+            imageSize = image.size,
             answers = answers,
         )
     }
@@ -195,8 +198,24 @@ class QuizRepository(
         addAll(decodeImagePaths())
     }.filter { it.isNotBlank() }.distinct()
 
+    private fun MovieEntity.quizImageCandidates(): List<QuizImageCandidate> {
+        val poster = posterPath?.takeIf { it.isNotBlank() }?.let { QuizImageCandidate(it, POSTER_IMAGE_SIZE) }
+        val backdrop = backdropPath?.takeIf { it.isNotBlank() }?.let { QuizImageCandidate(it, BACKDROP_IMAGE_SIZE) }
+        val details = decodeImagePaths().mapNotNull { path ->
+            path.takeIf { it.isNotBlank() }?.let { QuizImageCandidate(it, POSTER_IMAGE_SIZE) }
+        }
+        return (listOfNotNull(poster) + details + listOfNotNull(backdrop)).distinctBy { it.path }
+    }
+
+    private data class QuizImageCandidate(
+        val path: String,
+        val size: String,
+    )
+
     companion object {
         const val QUIZ_DURATION_SECONDS = QuizScoring.DurationSeconds
         const val QUESTION_COUNT = QuizScoring.QuestionCount
+        private const val POSTER_IMAGE_SIZE = "w342"
+        private const val BACKDROP_IMAGE_SIZE = "w780"
     }
 }
